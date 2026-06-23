@@ -71,7 +71,7 @@ exports.postmessage=async(req,res,next)=>{
     })
 
     const response=await axios.post(
-        "http://localhost:8080/chat",
+        "https://medical-chatbot-kr51.onrender.com/chat",
         {
             message,
             chathistory:chat.messages
