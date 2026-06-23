@@ -69,7 +69,7 @@ export const signupAction=async ({request})=>{
 
   
   const res=await axios.post(
-    "http://localhost:3002/api/auth/signup",
+    "https://medical-backend-61g4.onrender.com/api/auth/signup",
     data,
     {
       withCredentials:true

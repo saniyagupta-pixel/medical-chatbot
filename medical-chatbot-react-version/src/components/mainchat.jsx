@@ -21,7 +21,7 @@ const MainChat = ({ chatId, messages, setMessages }) => {
 
     try {
       const res = await axios.post(
-        `http://localhost:3002/api/chat/${user._id}/${chatId}`,
+        `https://medical-backend-61g4.onrender.com/api/chat/${user._id}/${chatId}`,
         {
           message: text,
         },

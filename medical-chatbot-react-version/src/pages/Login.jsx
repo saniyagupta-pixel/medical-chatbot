@@ -59,7 +59,7 @@ export const loginAction=async({request})=>{
 
   try{
     const res=await axios.post(
-      "http://localhost:3002/api/auth/login",
+      "https://medical-backend-61g4.onrender.com/api/auth/login",
       data,
       {
         withCredentials:true //without this browser won’t save/send that cookie.

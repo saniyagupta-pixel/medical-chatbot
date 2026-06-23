@@ -12,7 +12,7 @@ const SideBar = () => {
   useEffect(() => {
     const fetchChats = async () => {
       const res = await axios.get(
-        `http://localhost:3002/api/chats/${user._id}`,
+        `https://medical-backend-61g4.onrender.com/api/chats/${user._id}`,
         { withCredentials: true }
       );
 
@@ -24,7 +24,7 @@ const SideBar = () => {
 
   const createNewChat = async () => {
     const res = await axios.post(
-      `http://localhost:3002/api/new-chat/${user._id}`,
+      `https://medical-backend-61g4.onrender.com/api/new-chat/${user._id}`,
       {},
       { withCredentials: true }
     );
