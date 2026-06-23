@@ -66,11 +66,6 @@ def get_rag_chain():
     return rag_chain
 
 
-@app.route("/")
-def index():
-    return render_template("chat.html")
-
-
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
