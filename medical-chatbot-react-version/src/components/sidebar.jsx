@@ -10,17 +10,19 @@ const SideBar = () => {
   const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
-    const fetchChats = async () => {
-      const res = await axios.get(
-        `https://medical-backend-61g4.onrender.com/api/chats/${user._id}`,
-        { withCredentials: true }
-      );
+  const fetchChats = async () => {
+    if (!user?._id) return;
 
-      setChats(res.data);
-    };
+    const res = await axios.get(
+      `https://medical-backend-61g4.onrender.com/api/chats/${user._id}`,
+      { withCredentials: true }
+    );
 
-    fetchChats();
-  }, []);
+    setChats(res.data);
+  };
+
+  fetchChats();
+}, [chatId, user?._id]);
 
   const createNewChat = async () => {
     const res = await axios.post(
@@ -51,10 +53,6 @@ const SideBar = () => {
       <h3 style={{color:"orange"}}>Recents</h3>
       <ul className="nav nav-pills flex-column mb-auto">
   {chats
-    .filter(
-      (chat) =>
-        chat._id === chatId || chat.title !== "new chat"
-    )
     .map((chat) => (
       <li key={chat._id}>
         <Link
