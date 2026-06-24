@@ -52,7 +52,9 @@ const SideBar = () => {
       <hr />
       <h3 style={{color:"orange"}}>Recents</h3>
       <ul className="nav nav-pills flex-column mb-auto">
-  {chats
+  {chats.filter((chat)=>
+    chat._id === chatId || chat.title !== "new chat"
+  )
     .map((chat) => (
       <li key={chat._id}>
         <Link
