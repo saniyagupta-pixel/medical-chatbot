@@ -65,6 +65,9 @@ def get_rag_chain():
 
     return rag_chain
 
+@app.route("/")
+def home():
+    return "Medical Chatbot API is running 🚀"
 
 @app.route("/chat", methods=["POST"])
 def chat():

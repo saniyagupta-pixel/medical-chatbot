@@ -71,7 +71,7 @@ exports.postmessage=async(req,res,next)=>{
     })
 
     const response=await axios.post(
-        "https://medical-chatbot-kr51.onrender.com/chat",
+        "efficient-abundance-production-f04b.up.railway.app/chat",
         {
             message,
             chathistory:chat.messages
@@ -88,6 +88,13 @@ exports.postmessage=async(req,res,next)=>{
 
     res.json({reply:botreply});}
     catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
+    console.log("CHAT ERROR:");
+    console.log(err.response?.data);
+    console.log(err.message);
+
+    return res.status(500).json({
+        message: err.message,
+        details: err.response?.data
+    });
+}
 }
