@@ -71,7 +71,7 @@ exports.postmessage=async(req,res,next)=>{
     })
 
     const response=await axios.post(
-        "efficient-abundance-production-f04b.up.railway.app/chat",
+        "https://efficient-abundance-production-f04b.up.railway.app/chat",
         {
             message,
             chathistory:chat.messages
