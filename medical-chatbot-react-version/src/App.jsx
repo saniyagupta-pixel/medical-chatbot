@@ -1,7 +1,7 @@
-import { Outlet } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 import './App.css'
 import Header from './components/Header'
-import MainChat from './components/mainchat'
+//import MainChat from './components/mainchat'
 import SideBar from './components/sidebar'
 
 function App() {

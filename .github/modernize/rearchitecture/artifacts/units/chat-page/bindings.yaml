@@ -1,0 +1,13 @@
+unit: chat-page
+bindings:
+  - type: route-declaration
+    name: "React Router child path /App/chat/:chatId"
+    source_loc: 'medical-chatbot-react-version\src\main.jsx:19'
+    target: "ChatPage"
+    must_appear_in_target: true
+  - type: convention
+    name: "chatId route parameter"
+    source_loc: 'medical-chatbot-react-version\src\pages\chatpage.jsx:7'
+    target: "ChatPage message-fetch request"
+    must_appear_in_target: true
+runtime_config: []

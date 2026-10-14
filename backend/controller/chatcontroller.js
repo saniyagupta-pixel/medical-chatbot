@@ -1,6 +1,8 @@
-const express=require('express');
+// const express=require('express');
 const Chat=require("../model/chat");
 const axios=require("axios")
+
+const chatbotApiUrl = process.env.CHATBOT_API_URL;
 
 
 exports.postgetnewchat=async(req,res,next)=>{
@@ -51,6 +53,10 @@ exports.postmessage=async(req,res,next)=>{
     try{const userId=req.params.userId;
     const chatId=req.params.chatId;
 
+    if (!chatbotApiUrl) {
+        return res.status(503).json({ message: "Chatbot service URL is not configured" });
+    }
+
     const chat=await Chat.findOne({
         userId:userId,
         _id:chatId
@@ -71,7 +77,7 @@ exports.postmessage=async(req,res,next)=>{
     })
 
     const response=await axios.post(
-        "https://efficient-abundance-production-f04b.up.railway.app/chat",
+        chatbotApiUrl,
         {
             message,
             chathistory:chat.messages

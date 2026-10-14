@@ -1,0 +1,28 @@
+unit: authenticated-shell
+side_effects:
+  - source_loc: 'medical-chatbot-react-version\src\components\sidebar.jsx:16'
+    effect: "Fetches the user's chat list when the chat route or user id changes."
+    must_preserve: true
+  - source_loc: 'medical-chatbot-react-version\src\components\sidebar.jsx:28'
+    effect: "Creates a new chat and navigates to its chat route."
+    must_preserve: true
+branches:
+  - source_loc: 'medical-chatbot-react-version\src\App.jsx:11'
+    condition: "localStorage user value is absent."
+    behavior: "Renders Navigate to /login."
+    must_preserve: true
+  - source_loc: 'medical-chatbot-react-version\src\components\sidebar.jsx:14'
+    condition: "Parsed user has no _id."
+    behavior: "Skips fetching the chat list."
+    must_preserve: true
+  - source_loc: 'medical-chatbot-react-version\src\components\sidebar.jsx:40'
+    condition: "Chat title equals 'new chat' and it is not the current chat."
+    behavior: "Omits that chat from the recent-chat list."
+    must_preserve: true
+  - source_loc: 'medical-chatbot-react-version\src\components\Header.jsx:22'
+    condition: "User clicks Logout."
+    behavior: "Navigates to /; no API logout request is made by this control."
+    must_preserve: true
+error_paths: []
+concurrency:
+  model: event-loop

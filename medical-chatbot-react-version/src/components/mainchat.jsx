@@ -1,14 +1,17 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import axios from "axios";
 
 const MainChat = ({ chatId, messages, setMessages }) => {
   const userElement = useRef();
+  const [sendError, setSendError] = useState("");
   const user = JSON.parse(localStorage.getItem("user"));
 
   const handleSendButton = async () => {
     const text = userElement.current.value.trim();
 
     if (!text) return;
+
+    setSendError("");
 
     // Add user message instantly
     const updatedMessages = [
@@ -38,8 +41,10 @@ const MainChat = ({ chatId, messages, setMessages }) => {
           content: res.data.reply,
         },
       ]);
-    } catch (err) {
-      console.log(err);
+    } catch {
+      setSendError(
+        "Unable to get a reply. Check that the chatbot service is deployed and its URL is configured on the backend."
+      );
     }
   };
 
@@ -99,6 +104,11 @@ const MainChat = ({ chatId, messages, setMessages }) => {
           width: "100%",
         }}
       >
+        {sendError && (
+          <div className="alert alert-danger mx-auto mb-2" role="alert" style={{ maxWidth: "900px" }}>
+            {sendError}
+          </div>
+        )}
         <div
           className="input-group"
           style={{

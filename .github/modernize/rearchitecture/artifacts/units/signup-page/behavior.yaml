@@ -1,0 +1,18 @@
+unit: signup-page
+side_effects:
+  - source_loc: 'medical-chatbot-react-version\src\pages\signup.jsx:78'
+    effect: "Stores returned user JSON in localStorage under user."
+    must_preserve: true
+branches:
+  - source_loc: 'medical-chatbot-react-version\src\pages\signup.jsx:82'
+    condition: "Signup request succeeds."
+    behavior: "Redirects to /App/dashboard."
+    must_preserve: true
+error_paths:
+  - source_loc: 'medical-chatbot-react-version\src\pages\signup.jsx:71'
+    trigger: "Signup API request rejects, including duplicate user or server error."
+    outcome: "The action has no catch; rejection propagates to React Router."
+    contract: "No application-level mapping or fallback is defined in this action."
+    must_preserve: true
+concurrency:
+  model: event-loop
