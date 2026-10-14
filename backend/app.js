@@ -11,7 +11,9 @@ const app=express();
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://medical-frontend-hz37.onrender.com"
+    "https://medical-frontend-hz37.onrender.com",
+    "https://medical-chatbot-rho.vercel.app",
+    "https://medical-chatbot-e65v.vercel.app"
   ],
   credentials: true
 }));
