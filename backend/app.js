@@ -9,13 +9,25 @@ dotenv.config();
 
 const app=express();
 app.set("trust proxy", 1);
+
+const allowedOrigins = new Set([
+  "http://localhost:5173",
+  "https://medical-frontend-hz37.onrender.com",
+  "https://medical-chatbot-rho.vercel.app",
+  "https://medical-chatbot-e65v.vercel.app",
+  "https://medical-chatbot-e65v-git-fix-chatbot-service-url-sg-web-elite.vercel.app",
+  process.env.FRONTEND_URL,
+  ...(process.env.FRONTEND_URLS || "").split(",")
+].filter(Boolean).map((origin) => origin.trim().replace(/\/+$/, "")));
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://medical-frontend-hz37.onrender.com",
-    "https://medical-chatbot-rho.vercel.app",
-    "https://medical-chatbot-e65v.vercel.app"
-  ],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+    console.warn(`CORS blocked request from origin: ${origin}`);
+    return callback(null, false);
+  },
   credentials: true
 }));
 app.use(express.json());
