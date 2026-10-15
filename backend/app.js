@@ -12,6 +12,7 @@ app.set("trust proxy", 1);
 
 const allowedOrigins = new Set([
   "http://localhost:5173",
+  "http://127.0.0.1:5173",
   "https://medical-frontend-hz37.onrender.com",
   "https://medical-chatbot-rho.vercel.app",
   "https://medical-chatbot-e65v.vercel.app",

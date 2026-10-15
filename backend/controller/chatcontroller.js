@@ -2,7 +2,8 @@
 const Chat=require("../model/chat");
 const axios=require("axios")
 
-const chatbotApiUrl = process.env.CHATBOT_API_URL;
+const chatbotApiUrl =
+    process.env.CHATBOT_API_URL || "http://127.0.0.1:8080/chat";
 
 
 exports.postgetnewchat=async(req,res,next)=>{
