@@ -64,26 +64,31 @@ exports.postmessage=async(req,res,next)=>{
 
     if(!chat) return res.status(404).json({message:"chat not found"});
 
-    const message=req.body.message;
-    
-
-    if(chat.messages.length===0){
-        chat.title=message.slice(0,30);
+    const message = typeof req.body.message === "string" ? req.body.message.trim() : "";
+    if (!message) {
+        return res.status(400).json({message:"Enter a message before sending"});
     }
 
-    chat.messages.push({
-        role:"user",
-        content:message
-    })
+    const history = chat.messages.map(({role, content}) => ({role, content}));
 
     const response=await axios.post(
         chatbotApiUrl,
         {
             message,
-            chathistory:chat.messages
-        }
+            chathistory:history
+        },
+        {timeout:120000}
     )
-    const botreply=response.data.reply;
+    const botreply=typeof response.data?.reply === "string" ? response.data.reply.trim() : "";
+    if (!botreply) {
+        return res.status(502).json({message:"The chatbot service returned an empty response"});
+    }
+
+    if(chat.messages.length===0){
+        chat.title=message.slice(0,30);
+    }
+
+    chat.messages.push({role:"user",content:message});
 
     chat.messages.push({
         role:"bot",
@@ -94,13 +99,10 @@ exports.postmessage=async(req,res,next)=>{
 
     res.json({reply:botreply});}
     catch (err) {
-    console.log("CHAT ERROR:");
-    console.log(err.response?.data);
-    console.log(err.message);
+    console.error("Chat request failed:", err.response?.data || err.message);
 
-    return res.status(500).json({
-        message: err.message,
-        details: err.response?.data
+    return res.status(err.response?.status === 400 ? 400 : 502).json({
+        message: err.response?.data?.message || "The chatbot service could not answer right now"
     });
 }
 }

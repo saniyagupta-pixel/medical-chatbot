@@ -1,13 +1,20 @@
-import { Form } from "react-router-dom";
+import { Form, Link, useActionData } from "react-router-dom";
 
 const Login = () => {
-  
+  const actionData = useActionData();
+
   return (
     <div className="d-flex align-items-center py-4 bg-body-tertiary min-vh-100">
       <main className="form-signin w-100 m-auto" style={{ maxWidth: "400px" }}>
         <Form method="POST">
 
-          <h1 className="h3 mb-3 fw-normal">Please sign in</h1>
+          <h1 className="h3 mb-3 fw-normal">Sign in</h1>
+
+          {actionData?.error && (
+            <div className="alert alert-danger" role="alert">
+              {actionData.error}
+            </div>
+          )}
 
           <div className="form-floating mb-2">
             <input
@@ -16,6 +23,8 @@ const Login = () => {
               className="form-control"
               id="floatingInput"
               placeholder="name@example.com"
+              autoComplete="email"
+              required
             />
             <label htmlFor="floatingInput">Email address</label>
           </div>
@@ -27,6 +36,8 @@ const Login = () => {
               className="form-control"
               id="floatingPassword"
               placeholder="Password"
+              autoComplete="current-password"
+              required
             />
             <label htmlFor="floatingPassword">Password</label>
           </div>
@@ -34,6 +45,10 @@ const Login = () => {
           <button className="btn btn-primary w-100 py-2" type="submit">
             Sign in
           </button>
+
+          <p className="mt-3 text-center">
+            Don&apos;t have an account? <Link to="/signup">Sign up</Link>
+          </p>
 
           <p className="mt-5 mb-3 text-body-secondary text-center">
             © 2026
@@ -45,43 +60,3 @@ const Login = () => {
 };
 
 export default Login;
-
-import axios from "axios";
-import {redirect} from 'react-router-dom'
-
-export const loginAction=async({request})=>{
-  const formData=await request.formData();
-
-  const data={
-    email:formData.get('email'),
-    password:formData.get('password')
-  }
-
-  try{
-    const res=await axios.post(
-      "https://medical-backend-61g4.onrender.com/api/auth/login",
-      data,
-      {
-        withCredentials:true //without this browser won’t save/send that cookie.
-      }
-    )
-    localStorage.setItem(
-      "user",
-      JSON.stringify(res.data.user)
-    )
-    return redirect("/App/dashboard")
-  }
-  catch(error){
-  const status = error?.response?.status;
-
-  if (status === 404) {
-    return redirect("/signup");
-  }
-
-  if (status === 400) {
-    return { error: "Incorrect credentials" };
-  }
-
-  return { error: "Server error" };
-}
-}

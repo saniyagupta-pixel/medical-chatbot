@@ -1,17 +1,23 @@
-import { useRef, useState } from "react";
-import axios from "axios";
+import { useState } from "react";
+import api from "../api";
 
 const MainChat = ({ chatId, messages, setMessages }) => {
-  const userElement = useRef();
+  const [message, setMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState("");
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const handleSendButton = async () => {
-    const text = userElement.current.value.trim();
+    const text = message.trim();
 
-    if (!text) return;
+    if (!text || isSending) return;
+    if (!user?._id) {
+      setSendError("Please sign in again before sending a message.");
+      return;
+    }
 
     setSendError("");
+    setIsSending(true);
 
     // Add user message instantly
     const updatedMessages = [
@@ -20,31 +26,33 @@ const MainChat = ({ chatId, messages, setMessages }) => {
     ];
 
     setMessages(updatedMessages);
-    userElement.current.value = "";
+    setMessage("");
 
     try {
-      const res = await axios.post(
-        `https://medical-backend-61g4.onrender.com/api/chat/${user._id}/${chatId}`,
-        {
-          message: text,
-        },
-        {
-          withCredentials: true,
-        }
-      );
+      const { data } = await api.post(`/api/chat/${user._id}/${chatId}`, {
+        message: text,
+      });
+
+      if (typeof data?.reply !== "string" || !data.reply.trim()) {
+        throw new Error("The chatbot returned an empty response.");
+      }
 
       // Add bot reply
       setMessages([
         ...updatedMessages,
         {
           role: "bot",
-          content: res.data.reply,
+          content: data.reply,
         },
       ]);
-    } catch {
+    } catch (error) {
       setSendError(
-        "Unable to get a reply. Check that the chatbot service is deployed and its URL is configured on the backend."
+        error.response?.data?.message ||
+          error.message ||
+          "Unable to get a reply. Please try again."
       );
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -117,22 +125,26 @@ const MainChat = ({ chatId, messages, setMessages }) => {
           }}
         >
           <input
-            ref={userElement}
             type="text"
             className="form-control p-3"
             placeholder="Ask your medical question..."
+            value={message}
+            onChange={(event) => setMessage(event.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
                 handleSendButton();
               }
             }}
+            disabled={isSending}
           />
 
           <button
             className="btn btn-primary px-4"
             onClick={handleSendButton}
+            disabled={isSending || !message.trim()}
           >
-            Send
+            {isSending ? "Thinking..." : "Send"}
           </button>
         </div>
       </div>

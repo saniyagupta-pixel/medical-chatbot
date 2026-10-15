@@ -1,8 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import { FaHeartCirclePlus } from "react-icons/fa6";
+import api from "../api";
 
 const Header = () => {
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/api/auth/logout");
+    } catch (error) {
+      console.error("Unable to end the server session:", error);
+    } finally {
+      localStorage.removeItem("user");
+      navigate("/login", { replace: true });
+    }
+  };
 
   return (
     <header className="px-4 py-3 text-bg-dark shadow-sm">
@@ -19,7 +31,7 @@ const Header = () => {
           <div className="d-flex align-items-center gap-3">
 
             <button
-              onClick={() => navigate("/")}
+              onClick={handleLogout}
               type="button"
               className="btn btn-warning px-4"
             >

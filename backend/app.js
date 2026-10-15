@@ -8,6 +8,7 @@ const cors = require("cors");
 dotenv.config();
 
 const app=express();
+app.set("trust proxy", 1);
 app.use(cors({
   origin: [
     "http://localhost:5173",
@@ -33,7 +34,10 @@ app.use(
             mongoUrl:process.env.MONGO_URL
         }),
         cookie:{
-            maxAge:1000 * 60 * 60 * 24 * 365 * 10
+            maxAge:1000 * 60 * 60 * 24 * 30,
+            httpOnly:true,
+            sameSite:process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure:process.env.NODE_ENV === "production"
         }
     })
 )

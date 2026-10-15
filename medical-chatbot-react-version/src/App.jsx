@@ -9,7 +9,7 @@ function App() {
 
   // 🔥 IMPORTANT: prevent broken UI on refresh
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
   return (
     <>

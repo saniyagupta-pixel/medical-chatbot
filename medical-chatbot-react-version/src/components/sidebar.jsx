@@ -1,39 +1,32 @@
 import { IoMdAddCircle } from "react-icons/io";
 import { Link, useNavigate,useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 
 const SideBar = () => {
   const [chats, setChats] = useState([]);
   const navigate = useNavigate();
   const { chatId } = useParams();
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   useEffect(() => {
   const fetchChats = async () => {
     if (!user?._id) return;
 
-    const res = await axios.get(
-      `https://medical-backend-61g4.onrender.com/api/chats/${user._id}`,
-      { withCredentials: true }
-    );
+    const { data } = await api.get(`/api/chats/${user._id}`);
 
-    setChats(res.data);
+    setChats(data);
   };
 
   fetchChats();
 }, [chatId, user?._id]);
 
   const createNewChat = async () => {
-    const res = await axios.post(
-      `https://medical-backend-61g4.onrender.com/api/new-chat/${user._id}`,
-      {},
-      { withCredentials: true }
-    );
+    const { data } = await api.post(`/api/new-chat/${user._id}`, {});
 
-    setChats((prev) => [res.data, ...prev]);
+    setChats((prev) => [data, ...prev]);
 
-    navigate(`/app/chat/${res.data._id}`);
+    navigate(`/app/chat/${data._id}`);
   };
 
   return (
@@ -70,7 +63,7 @@ const SideBar = () => {
 
       {/* Profile */}
       <div>
-        <strong>{user.name}</strong>
+        <strong>{user?.name}</strong>
       </div>
     </div>
   );

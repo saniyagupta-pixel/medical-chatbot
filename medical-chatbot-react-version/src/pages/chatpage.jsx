@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import MainChat from "../components/mainchat";
 
 const ChatPage = () => {
@@ -8,21 +8,19 @@ const ChatPage = () => {
   const [messages, setMessages] = useState([]);
 
   const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?._id;
 
   useEffect(() => {
     const fetchMessages = async () => {
-      const res = await axios.get(
-        `https://medical-backend-61g4.onrender.com/api/chat/${user._id}/${chatId}`,
-        {
-          withCredentials: true,
-        }
-      );
+      if (!userId) return;
 
-      setMessages(res.data.messages);
+      const { data } = await api.get(`/api/chat/${userId}/${chatId}`);
+
+      setMessages(data.messages || []);
     };
 
     fetchMessages();
-  }, [chatId]);
+  }, [chatId, userId]);
 
   return (
     <MainChat
