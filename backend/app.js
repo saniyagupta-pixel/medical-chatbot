@@ -54,6 +54,7 @@ const auth=(req,res,next)=>{
     
 }
 
-app.listen(3002,()=>{
-    console.log("server running on port 3002");
+const port = process.env.PORT || 3002;
+app.listen(port,()=>{
+    console.log(`server running on port ${port}`);
 })

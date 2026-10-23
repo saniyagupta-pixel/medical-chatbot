@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, jsonify, request
 from src.helper import download_embeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain.chains import create_retrieval_chain
@@ -16,17 +16,9 @@ load_dotenv()
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-os.environ["GROQ_API_KEY"] = GROQ_API_KEY
-
 # -----------------------------
 # Initialize only lightweight objects
 # -----------------------------
-
-llm = ChatGroq(
-    groq_api_key=GROQ_API_KEY,
-    model_name="llama-3.1-8b-instant"
-)
 
 prompt = ChatPromptTemplate.from_messages(
     [
@@ -41,6 +33,9 @@ def get_rag_chain():
     global rag_chain
 
     if rag_chain is None:
+        if not PINECONE_API_KEY or not GROQ_API_KEY:
+            raise RuntimeError("PINECONE_API_KEY and GROQ_API_KEY must be configured")
+
         embedding = download_embeddings()
 
         docsearch = PineconeVectorStore.from_existing_index(
@@ -51,6 +46,11 @@ def get_rag_chain():
         retriever = docsearch.as_retriever(
             search_type="similarity",
             search_kwargs={"k": 3}
+        )
+
+        llm = ChatGroq(
+            groq_api_key=GROQ_API_KEY,
+            model_name=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
         )
 
         question_answer_chain = create_stuff_documents_chain(
@@ -71,25 +71,52 @@ def home():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"message": "Send a JSON request body"}), 400
 
     message = data.get("message")
+    if not isinstance(message, str) or not message.strip():
+        return jsonify({"message": "Enter a message before sending"}), 400
+    if len(message) > 10000:
+        return jsonify({"message": "Message is too long"}), 400
+
     history = data.get("chathistory", [])
+    if not isinstance(history, list):
+        return jsonify({"message": "Chat history must be a list"}), 400
 
     history_text = ""
-    for msg in history:
+    for msg in history[-20:]:
+        if (
+            not isinstance(msg, dict)
+            or msg.get("role") not in {"user", "bot", "assistant"}
+            or not isinstance(msg.get("content"), str)
+        ):
+            return jsonify({"message": "Chat history contains an invalid message"}), 400
         history_text += f"{msg['role']}: {msg['content']}\n"
 
-    chain = get_rag_chain()
+    try:
+        chain = get_rag_chain()
 
-    response = chain.invoke({
-        "input": message,
-        "question": message,
-        "chat_history": history_text
-    })
+        response = chain.invoke({
+            "input": message.strip(),
+            "question": message.strip(),
+            "chat_history": history_text
+        })
+    except RuntimeError as error:
+        app.logger.error("Chatbot configuration error: %s", error)
+        return jsonify({"message": "The chatbot service is not configured"}), 503
+    except Exception:
+        app.logger.exception("Chatbot request failed")
+        return jsonify({"message": "The chatbot could not answer right now"}), 502
+
+    answer = response.get("answer") if isinstance(response, dict) else None
+    if not isinstance(answer, str) or not answer.strip():
+        app.logger.error("Chatbot chain returned no answer")
+        return jsonify({"message": "The chatbot returned an empty response"}), 502
 
     return jsonify({
-        "reply": response["answer"]
+        "reply": answer.strip()
     })
 
 
