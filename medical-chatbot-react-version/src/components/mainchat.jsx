@@ -1,14 +1,16 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import axios from "axios";
 
 const MainChat = ({ chatId, messages, setMessages }) => {
   const userElement = useRef();
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState("");
   const user = JSON.parse(localStorage.getItem("user"));
 
   const handleSendButton = async () => {
     const text = userElement.current.value.trim();
 
-    if (!text) return;
+    if (!text || isSending) return;
 
     // Add user message instantly
     const updatedMessages = [
@@ -18,6 +20,8 @@ const MainChat = ({ chatId, messages, setMessages }) => {
 
     setMessages(updatedMessages);
     userElement.current.value = "";
+    setError("");
+    setIsSending(true);
 
     try {
       const res = await axios.post(
@@ -39,7 +43,12 @@ const MainChat = ({ chatId, messages, setMessages }) => {
         },
       ]);
     } catch (err) {
-      console.log(err);
+      setError(
+        err.response?.data?.message ||
+          "The chatbot could not answer right now. Please try again."
+      );
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -99,6 +108,15 @@ const MainChat = ({ chatId, messages, setMessages }) => {
           width: "100%",
         }}
       >
+        {error && (
+          <div
+            className="alert alert-danger mb-2"
+            role="alert"
+            style={{ maxWidth: "900px", margin: "0 auto" }}
+          >
+            {error}
+          </div>
+        )}
         <div
           className="input-group"
           style={{
@@ -111,6 +129,7 @@ const MainChat = ({ chatId, messages, setMessages }) => {
             type="text"
             className="form-control p-3"
             placeholder="Ask your medical question..."
+            disabled={isSending}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 handleSendButton();
@@ -121,8 +140,9 @@ const MainChat = ({ chatId, messages, setMessages }) => {
           <button
             className="btn btn-primary px-4"
             onClick={handleSendButton}
+            disabled={isSending}
           >
-            Send
+            {isSending ? "Sending..." : "Send"}
           </button>
         </div>
       </div>
