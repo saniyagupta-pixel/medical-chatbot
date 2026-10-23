@@ -14,7 +14,7 @@ const SideBar = () => {
     if (!user?._id) return;
 
     const res = await axios.get(
-      `https://medical-backend-61g4.onrender.com/api/chats/${user._id}`,
+      `https://medical-chatbot-1-4l2b.onrender.com/api/chats/${user._id}`,
       { withCredentials: true }
     );
 
@@ -26,7 +26,7 @@ const SideBar = () => {
 
   const createNewChat = async () => {
     const res = await axios.post(
-      `https://medical-backend-61g4.onrender.com/api/new-chat/${user._id}`,
+      `https://medical-chatbot-1-4l2b.onrender.com/api/new-chat/${user._id}`,
       {},
       { withCredentials: true }
     );

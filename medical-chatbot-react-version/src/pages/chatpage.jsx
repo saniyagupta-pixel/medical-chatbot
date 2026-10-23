@@ -12,7 +12,7 @@ const ChatPage = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       const res = await axios.get(
-        `https://medical-backend-61g4.onrender.com/api/chat/${user._id}/${chatId}`,
+        `https://medical-chatbot-1-4l2b.onrender.com/api/chat/${user._id}/${chatId}`,
         {
           withCredentials: true,
         }
