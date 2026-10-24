@@ -1,15 +1,18 @@
 from flask import Flask, jsonify, request
 from src.helper import download_embeddings
 from langchain_pinecone import PineconeVectorStore
-from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from src.prompt import *
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 import os
+import logging
+from time import perf_counter
+from uuid import uuid4
 
 app = Flask(__name__)
+app.logger.setLevel(logging.INFO)
 
 load_dotenv()
 
@@ -27,17 +30,26 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-rag_chain = None
+retriever = None
+question_answer_chain = None
 
-def get_rag_chain():
-    global rag_chain
+def get_rag_components():
+    global retriever, question_answer_chain
 
-    if rag_chain is None:
+    if retriever is None or question_answer_chain is None:
         if not PINECONE_API_KEY or not GROQ_API_KEY:
             raise RuntimeError("PINECONE_API_KEY and GROQ_API_KEY must be configured")
 
+        app.logger.info("RAG initialization: loading embedding model")
+        started_at = perf_counter()
         embedding = download_embeddings()
+        app.logger.info(
+            "RAG initialization: embedding model loaded in %.2f seconds",
+            perf_counter() - started_at,
+        )
 
+        app.logger.info("RAG initialization: connecting to Pinecone index")
+        started_at = perf_counter()
         docsearch = PineconeVectorStore.from_existing_index(
             index_name="medical-chatbot",
             embedding=embedding
@@ -47,7 +59,12 @@ def get_rag_chain():
             search_type="similarity",
             search_kwargs={"k": 3}
         )
+        app.logger.info(
+            "RAG initialization: Pinecone retriever ready in %.2f seconds",
+            perf_counter() - started_at,
+        )
 
+        app.logger.info("RAG initialization: creating Groq answer chain")
         llm = ChatGroq(
             groq_api_key=GROQ_API_KEY,
             model_name=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
@@ -57,20 +74,24 @@ def get_rag_chain():
             llm,
             prompt
         )
+        app.logger.info("RAG initialization: answer chain ready")
 
-        rag_chain = create_retrieval_chain(
-            retriever,
-            question_answer_chain
-        )
-
-    return rag_chain
+    return retriever, question_answer_chain
 
 @app.route("/")
 def home():
     return "Medical Chatbot API is running 🚀"
 
+@app.route("/healthz")
+def health():
+    return jsonify({
+        "status": "ok",
+        "rag_initialized": retriever is not None and question_answer_chain is not None,
+    })
+
 @app.route("/chat", methods=["POST"])
 def chat():
+    request_id = uuid4().hex[:12]
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return jsonify({"message": "Send a JSON request body"}), 400
@@ -95,24 +116,45 @@ def chat():
             return jsonify({"message": "Chat history contains an invalid message"}), 400
         history_text += f"{msg['role']}: {msg['content']}\n"
 
+    stage = "initialization"
     try:
-        chain = get_rag_chain()
+        app.logger.info("Chat %s: request received", request_id)
+        rag_retriever, answer_chain = get_rag_components()
 
-        response = chain.invoke({
+        stage = "Pinecone retrieval"
+        app.logger.info("Chat %s: starting Pinecone retrieval", request_id)
+        started_at = perf_counter()
+        documents = rag_retriever.invoke(message.strip())
+        app.logger.info(
+            "Chat %s: Pinecone retrieval returned %d documents in %.2f seconds",
+            request_id,
+            len(documents),
+            perf_counter() - started_at,
+        )
+
+        stage = "Groq generation"
+        app.logger.info("Chat %s: starting Groq generation", request_id)
+        started_at = perf_counter()
+        answer = answer_chain.invoke({
             "input": message.strip(),
             "question": message.strip(),
-            "chat_history": history_text
+            "chat_history": history_text,
+            "context": documents,
         })
+        app.logger.info(
+            "Chat %s: Groq generation completed in %.2f seconds",
+            request_id,
+            perf_counter() - started_at,
+        )
     except RuntimeError as error:
-        app.logger.error("Chatbot configuration error: %s", error)
+        app.logger.exception("Chat %s: configuration error during %s", request_id, stage)
         return jsonify({"message": "The chatbot service is not configured"}), 503
     except Exception:
-        app.logger.exception("Chatbot request failed")
+        app.logger.exception("Chat %s: failed during %s", request_id, stage)
         return jsonify({"message": "The chatbot could not answer right now"}), 502
 
-    answer = response.get("answer") if isinstance(response, dict) else None
     if not isinstance(answer, str) or not answer.strip():
-        app.logger.error("Chatbot chain returned no answer")
+        app.logger.error("Chat %s: answer chain returned no answer", request_id)
         return jsonify({"message": "The chatbot returned an empty response"}), 502
 
     return jsonify({
