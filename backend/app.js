@@ -8,11 +8,17 @@ const cors = require("cors");
 dotenv.config();
 
 const app=express();
+const frontendOrigins = (
+  process.env.FRONTEND_URLS ||
+  process.env.FRONTEND_URL ||
+  "https://medical-frontend-hz37.onrender.com"
+)
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://medical-frontend-hz37.onrender.com"
-  ],
+  origin: ["http://localhost:5173", ...frontendOrigins],
   credentials: true
 }));
 app.use(express.json());

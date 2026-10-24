@@ -46,8 +46,8 @@ const Login = () => {
 
 export default Login;
 
-import axios from "axios";
-import {redirect} from 'react-router-dom'
+import { redirect } from "react-router-dom";
+import api from "../api";
 
 export const loginAction=async({request})=>{
   const formData=await request.formData();
@@ -58,13 +58,7 @@ export const loginAction=async({request})=>{
   }
 
   try{
-    const res=await axios.post(
-      "https://medical-chatbot-1-4l2b.onrender.com/api/auth/login",
-      data,
-      {
-        withCredentials:true //without this browser won’t save/send that cookie.
-      }
-    )
+    const res = await api.post("/api/auth/login", data);
     localStorage.setItem(
       "user",
       JSON.stringify(res.data.user)

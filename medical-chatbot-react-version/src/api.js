@@ -3,9 +3,7 @@ import axios from "axios";
 const api = axios.create({
   baseURL:
     import.meta.env.VITE_API_BASE_URL ||
-    (import.meta.env.DEV
-      ? ""
-      : "https://medical-chatbot-iqkkisieo-sg-web-elite.vercel.app"),
+    "https://medical-chatbot-1-4l2b.onrender.com",
   withCredentials: true,
 });
 

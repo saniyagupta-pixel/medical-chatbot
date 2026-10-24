@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import axios from "axios";
+import api from "../api";
 
 const MainChat = ({ chatId, messages, setMessages }) => {
   const userElement = useRef();
@@ -24,13 +24,10 @@ const MainChat = ({ chatId, messages, setMessages }) => {
     setIsSending(true);
 
     try {
-      const res = await axios.post(
-        `https://medical-chatbot-1-4l2b.onrender.com/api/chat/${user._id}/${chatId}`,
+      const res = await api.post(
+        `/api/chat/${user._id}/${chatId}`,
         {
           message: text,
-        },
-        {
-          withCredentials: true,
         }
       );
 

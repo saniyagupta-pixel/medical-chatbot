@@ -1,0 +1,144 @@
+modules:
+  - name: client-router
+    kind: config
+    source_loc: 'medical-chatbot-react-version\src\main.jsx:14'
+    used_by_units: [login-page, signup-page, authenticated-shell, dashboard-page, chat-page]
+    fields:
+      - name: root-route
+        type: "path / -> Login and loginAction"
+      - name: signup-route
+        type: "path /signup -> SignUp and signupAction"
+      - name: authenticated-route
+        type: "path /App -> App layout"
+      - name: dashboard-route
+        type: "path /App/dashboard -> DashBoard"
+      - name: chat-route
+        type: "path /App/chat/:chatId -> ChatPage"
+    god_class: false
+    split_candidate: false
+    migration_strategy: wrap
+    notes: "One route table wires all SPA page units; consumers use only their route field."
+
+  - name: authenticated-layout
+    kind: config
+    source_loc: 'medical-chatbot-react-version\src\App.jsx:6'
+    used_by_units: [authenticated-shell, dashboard-page, chat-page]
+    fields:
+      - name: App
+        type: "React component; reads localStorage user, renders Navigate or shared layout"
+      - name: Header
+        type: "React component; renders app title and Logout navigation"
+      - name: SideBar
+        type: "React component; fetches and creates user chats"
+    god_class: false
+    split_candidate: false
+    migration_strategy: wrap
+    notes: "Shared parent layout and navigation rendered for nested authenticated routes."
+
+  - name: auth-router
+    kind: config
+    source_loc: 'backend\routes\authRouter.js:1'
+    used_by_units: [auth-signup-api, auth-login-api, auth-logout-api]
+    fields:
+      - name: signup-route
+        type: "POST /signup"
+      - name: login-route
+        type: "POST /login with logging middleware"
+      - name: logout-route
+        type: "POST /logout"
+    god_class: false
+    split_candidate: false
+    migration_strategy: copy
+    notes: "Mounted under /api/auth in backend/app.js."
+
+  - name: auth-controller
+    kind: utility
+    source_loc: 'backend\controller\authcontroller.js:1'
+    used_by_units: [auth-signup-api, auth-login-api, auth-logout-api]
+    fields:
+      - name: postSignUp
+        type: "async Express handler"
+      - name: postloginpage
+        type: "async Express handler"
+      - name: postlogout
+        type: "Express handler"
+    god_class: false
+    split_candidate: false
+    migration_strategy: copy
+    notes: "Contains one handler per auth endpoint."
+
+  - name: user-model
+    kind: dto
+    source_loc: 'backend\model\User.js:3'
+    used_by_units: [auth-signup-api, auth-login-api]
+    fields:
+      - name: User
+        type: "Mongoose model"
+      - name: name
+        type: "String; required"
+      - name: email
+        type: "String; required and unique"
+      - name: password
+        type: "String; required; stored as bcrypt hash by signup handler"
+    god_class: false
+    split_candidate: false
+    migration_strategy: copy
+    notes: "User schema declared in backend/model/User.js."
+
+  - name: chat-router
+    kind: config
+    source_loc: 'backend\routes\chatRouter.js:1'
+    used_by_units: [chat-create-api, chat-list-api, chat-read-api, chat-send-api]
+    fields:
+      - name: create-route
+        type: "POST /new-chat/:userId"
+      - name: list-route
+        type: "GET /chats/:userId"
+      - name: read-route
+        type: "GET /chat/:userId/:chatId"
+      - name: send-route
+        type: "POST /chat/:userId/:chatId"
+    god_class: false
+    split_candidate: false
+    migration_strategy: copy
+    notes: "Mounted under /api in backend/app.js."
+
+  - name: chat-controller
+    kind: utility
+    source_loc: 'backend\controller\chatcontroller.js:1'
+    used_by_units: [chat-create-api, chat-list-api, chat-read-api, chat-send-api]
+    fields:
+      - name: postgetnewchat
+        type: "async Express handler"
+      - name: getchats
+        type: "async Express handler"
+      - name: getchatmessages
+        type: "async Express handler"
+      - name: postmessage
+        type: "async Express handler"
+    god_class: false
+    split_candidate: false
+    migration_strategy: copy
+    notes: "Contains handlers for the four chat REST routes."
+
+  - name: chat-model
+    kind: dto
+    source_loc: 'backend\model\chat.js:1'
+    used_by_units: [chat-create-api, chat-list-api, chat-read-api, chat-send-api]
+    fields:
+      - name: Chat
+        type: "Mongoose model"
+      - name: userId
+        type: "ObjectId; ref User; required"
+      - name: title
+        type: "String"
+      - name: messages
+        type: "Array of embedded message documents"
+      - name: role
+        type: "String on embedded message"
+      - name: content
+        type: "String on embedded message"
+    god_class: false
+    split_candidate: false
+    migration_strategy: copy
+    notes: "Chat schema and embedded message schema are in backend/model/chat.js."

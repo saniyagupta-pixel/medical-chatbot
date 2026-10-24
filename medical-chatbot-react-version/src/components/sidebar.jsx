@@ -1,7 +1,7 @@
 import { IoMdAddCircle } from "react-icons/io";
 import { Link, useNavigate,useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 
 const SideBar = () => {
   const [chats, setChats] = useState([]);
@@ -13,10 +13,7 @@ const SideBar = () => {
   const fetchChats = async () => {
     if (!user?._id) return;
 
-    const res = await axios.get(
-      `https://medical-chatbot-1-4l2b.onrender.com/api/chats/${user._id}`,
-      { withCredentials: true }
-    );
+    const res = await api.get(`/api/chats/${user._id}`);
 
     setChats(res.data);
   };
@@ -25,11 +22,7 @@ const SideBar = () => {
 }, [chatId, user?._id]);
 
   const createNewChat = async () => {
-    const res = await axios.post(
-      `https://medical-chatbot-1-4l2b.onrender.com/api/new-chat/${user._id}`,
-      {},
-      { withCredentials: true }
-    );
+    const res = await api.post(`/api/new-chat/${user._id}`, {});
 
     setChats((prev) => [res.data, ...prev]);
 

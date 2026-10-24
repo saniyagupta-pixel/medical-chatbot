@@ -7,6 +7,7 @@ __pycache__/
 .env
 backend/.env
 chatbot/.env
+chatbot/-HP15fd0187tu.env
 
 # Build files
 dist/

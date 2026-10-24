@@ -1,0 +1,13 @@
+unit: login-page
+bindings:
+  - type: route-declaration
+    name: "React Router path /"
+    source_loc: 'medical-chatbot-react-version\src\main.jsx:15'
+    target: "Login component and loginAction"
+    must_appear_in_target: true
+  - type: route-declaration
+    name: "React Router Form POST action"
+    source_loc: 'medical-chatbot-react-version\src\pages\Login.jsx:8'
+    target: "loginAction"
+    must_appear_in_target: true
+runtime_config: []

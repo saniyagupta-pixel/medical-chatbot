@@ -1,0 +1,262 @@
+units:
+  - name: login-page
+    trigger: page
+    trigger_detail: "GET / in the React SPA; the same route submits loginAction."
+    source_anchors:
+      - path: 'medical-chatbot-react-version\index.html'
+        line: 10
+      - path: 'medical-chatbot-react-version\src\main.jsx'
+        line: 14
+      - path: 'medical-chatbot-react-version\src\pages\Login.jsx'
+        line: 52
+    exported_signature: []
+    dynamic_entrypoints: []
+    depends_on:
+      - unit: auth-login-api
+        via: "POST /api/auth/login"
+    shared_refs:
+      - module: client-router
+        used_fields: [root-route]
+
+  - name: signup-page
+    trigger: page
+    trigger_detail: "GET /signup in the React SPA; form submits signupAction."
+    source_anchors:
+      - path: 'medical-chatbot-react-version\src\pages\signup.jsx'
+        line: 61
+    exported_signature: []
+    dynamic_entrypoints: []
+    depends_on:
+      - unit: auth-signup-api
+        via: "POST /api/auth/signup"
+    shared_refs:
+      - module: client-router
+        used_fields: [signup-route]
+
+  - name: authenticated-shell
+    trigger: page
+    trigger_detail: "Parent route /App; wraps dashboard and chat pages."
+    source_anchors:
+      - path: 'medical-chatbot-react-version\src\App.jsx'
+        line: 6
+    exported_signature: []
+    dynamic_entrypoints: []
+    depends_on:
+      - unit: chat-create-api
+        via: "POST /api/new-chat/:userId from the sidebar"
+      - unit: chat-list-api
+        via: "GET /api/chats/:userId from the sidebar"
+    shared_refs:
+      - module: authenticated-layout
+        used_fields: [App, Header, SideBar]
+      - module: client-router
+        used_fields: [authenticated-route]
+
+  - name: dashboard-page
+    trigger: page
+    trigger_detail: "GET /App/dashboard in the React SPA."
+    source_anchors:
+      - path: 'medical-chatbot-react-version\src\pages\dashboard.jsx'
+        line: 1
+    exported_signature: []
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs:
+      - module: authenticated-layout
+        used_fields: [App, Header, SideBar]
+      - module: client-router
+        used_fields: [dashboard-route]
+
+  - name: chat-page
+    trigger: page
+    trigger_detail: "GET /App/chat/:chatId in the React SPA."
+    source_anchors:
+      - path: 'medical-chatbot-react-version\src\pages\chatpage.jsx'
+        line: 6
+      - path: 'medical-chatbot-react-version\src\components\mainchat.jsx'
+        line: 4
+    exported_signature: []
+    dynamic_entrypoints: []
+    depends_on:
+      - unit: chat-read-api
+        via: "GET /api/chat/:userId/:chatId"
+      - unit: chat-send-api
+        via: "POST /api/chat/:userId/:chatId"
+    shared_refs:
+      - module: authenticated-layout
+        used_fields: [App, Header, SideBar]
+      - module: client-router
+        used_fields: [chat-route]
+
+  - name: auth-signup-api
+    trigger: api
+    trigger_detail: "POST /api/auth/signup"
+    source_anchors:
+      - path: 'backend\controller\authcontroller.js'
+        line: 6
+    exported_signature:
+      - method: "postSignUp(req, res, next)"
+        source_loc: 'backend\controller\authcontroller.js:6'
+        stability: must_preserve
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs:
+      - module: auth-router
+        used_fields: [signup-route]
+      - module: auth-controller
+        used_fields: [postSignUp]
+      - module: user-model
+        used_fields: [User, name, email, password]
+
+  - name: auth-login-api
+    trigger: api
+    trigger_detail: "POST /api/auth/login"
+    source_anchors:
+      - path: 'backend\controller\authcontroller.js'
+        line: 31
+    exported_signature:
+      - method: "postloginpage(req, res, next)"
+        source_loc: 'backend\controller\authcontroller.js:31'
+        stability: must_preserve
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs:
+      - module: auth-router
+        used_fields: [login-route]
+      - module: auth-controller
+        used_fields: [postloginpage]
+      - module: user-model
+        used_fields: [User, email, password]
+
+  - name: auth-logout-api
+    trigger: api
+    trigger_detail: "POST /api/auth/logout"
+    source_anchors:
+      - path: 'backend\controller\authcontroller.js'
+        line: 57
+    exported_signature:
+      - method: "postlogout(req, res, next)"
+        source_loc: 'backend\controller\authcontroller.js:57'
+        stability: must_preserve
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs:
+      - module: auth-router
+        used_fields: [logout-route]
+      - module: auth-controller
+        used_fields: [postlogout]
+
+  - name: chat-create-api
+    trigger: api
+    trigger_detail: "POST /api/new-chat/:userId"
+    source_anchors:
+      - path: 'backend\controller\chatcontroller.js'
+        line: 6
+    exported_signature:
+      - method: "postgetnewchat(req, res, next)"
+        source_loc: 'backend\controller\chatcontroller.js:6'
+        stability: must_preserve
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs:
+      - module: chat-router
+        used_fields: [create-route]
+      - module: chat-controller
+        used_fields: [postgetnewchat]
+      - module: chat-model
+        used_fields: [Chat, userId, title, messages]
+
+  - name: chat-list-api
+    trigger: api
+    trigger_detail: "GET /api/chats/:userId"
+    source_anchors:
+      - path: 'backend\controller\chatcontroller.js'
+        line: 22
+    exported_signature:
+      - method: "getchats(req, res, next)"
+        source_loc: 'backend\controller\chatcontroller.js:22'
+        stability: must_preserve
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs:
+      - module: chat-router
+        used_fields: [list-route]
+      - module: chat-controller
+        used_fields: [getchats]
+      - module: chat-model
+        used_fields: [Chat, userId, title, messages]
+
+  - name: chat-read-api
+    trigger: api
+    trigger_detail: "GET /api/chat/:userId/:chatId"
+    source_anchors:
+      - path: 'backend\controller\chatcontroller.js'
+        line: 35
+    exported_signature:
+      - method: "getchatmessages(req, res, next)"
+        source_loc: 'backend\controller\chatcontroller.js:35'
+        stability: must_preserve
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs:
+      - module: chat-router
+        used_fields: [read-route]
+      - module: chat-controller
+        used_fields: [getchatmessages]
+      - module: chat-model
+        used_fields: [Chat, userId, messages]
+
+  - name: chat-send-api
+    trigger: api
+    trigger_detail: "POST /api/chat/:userId/:chatId"
+    source_anchors:
+      - path: 'backend\controller\chatcontroller.js'
+        line: 50
+    exported_signature:
+      - method: "postmessage(req, res, next)"
+        source_loc: 'backend\controller\chatcontroller.js:50'
+        stability: must_preserve
+    dynamic_entrypoints: []
+    depends_on:
+      - unit: chatbot-chat-api
+        via: "POST https://efficient-abundance-production-f04b.up.railway.app/chat"
+    shared_refs:
+      - module: chat-router
+        used_fields: [send-route]
+      - module: chat-controller
+        used_fields: [postmessage]
+      - module: chat-model
+        used_fields: [Chat, userId, title, messages]
+
+  - name: chatbot-health-api
+    trigger: api
+    trigger_detail: "GET / on the Flask chatbot service."
+    source_anchors:
+      - path: 'chatbot\app.py'
+        line: 68
+    exported_signature: []
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs: []
+
+  - name: chatbot-chat-api
+    trigger: api
+    trigger_detail: "POST /chat on the Flask chatbot service."
+    source_anchors:
+      - path: 'chatbot\app.py'
+        line: 72
+    exported_signature: []
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs: []
+
+  - name: vector-index-build
+    trigger: cli
+    trigger_detail: "Direct execution of chatbot/store_index.py; no command-line arguments are read."
+    source_anchors:
+      - path: 'chatbot\store_index.py'
+        line: 1
+    exported_signature: []
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs: []

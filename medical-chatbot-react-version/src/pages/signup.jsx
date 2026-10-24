@@ -1,4 +1,5 @@
 import { Form } from "react-router-dom";
+import api from "../api";
 const SignUp = () => {
   return (
     <div className="d-flex align-items-center py-4 bg-body-tertiary min-vh-100">
@@ -55,8 +56,7 @@ const SignUp = () => {
 
 export default SignUp;
 
-import axios from "axios"
-import {redirect} from 'react-router-dom'
+import { redirect } from "react-router-dom";
 
 export const signupAction=async ({request})=>{
   const formData=await request.formData();
@@ -68,13 +68,7 @@ export const signupAction=async ({request})=>{
   }
 
   
-  const res=await axios.post(
-    "https://medical-chatbot-1-4l2b.onrender.com/api/auth/signup",
-    data,
-    {
-      withCredentials:true
-    }
-  )
+  const res = await api.post("/api/auth/signup", data);
   localStorage.setItem(
     "user",
     JSON.stringify(res.data.user)
