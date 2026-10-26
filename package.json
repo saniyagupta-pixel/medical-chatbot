@@ -1,0 +1,10 @@
+{
+  "name": "medical-chatbot",
+  "private": true,
+  "scripts": {
+    "start": "concurrently --kill-others --names backend,chatbot,frontend --prefix-colors blue,green,magenta \"npm --prefix backend run dev\" \"powershell -NoProfile -ExecutionPolicy Bypass -File chatbot/start.ps1\" \"powershell -NoProfile -ExecutionPolicy Bypass -File medical-chatbot-react-version/start.ps1\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

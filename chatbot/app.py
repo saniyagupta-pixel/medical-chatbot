@@ -1,20 +1,21 @@
 from flask import Flask, jsonify, request
-from src.helper import download_embeddings
-from langchain_pinecone import PineconeVectorStore
-from langchain.chains.combine_documents import create_stuff_documents_chain
+from src.helper import download_embeddings, format_docs, get_retriever
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
 from src.prompt import *
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 import os
 import logging
+from pathlib import Path
 from time import perf_counter
 from uuid import uuid4
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -50,14 +51,11 @@ def get_rag_components():
 
         app.logger.info("RAG initialization: connecting to Pinecone index")
         started_at = perf_counter()
-        docsearch = PineconeVectorStore.from_existing_index(
+        retriever = get_retriever(
+            embedding,
             index_name="medical-chatbot",
-            embedding=embedding
-        )
-
-        retriever = docsearch.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": 3}
+            api_key=PINECONE_API_KEY,
+            k=3,
         )
         app.logger.info(
             "RAG initialization: Pinecone retriever ready in %.2f seconds",
@@ -66,13 +64,17 @@ def get_rag_components():
 
         app.logger.info("RAG initialization: creating Groq answer chain")
         llm = ChatGroq(
-            groq_api_key=GROQ_API_KEY,
-            model_name=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+            api_key=GROQ_API_KEY,
+            model=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
         )
 
-        question_answer_chain = create_stuff_documents_chain(
-            llm,
-            prompt
+        # Replaces langchain.chains.create_stuff_documents_chain (moved to
+        # langchain-classic in LangChain 1.0): format docs -> prompt -> LLM -> str
+        question_answer_chain = (
+            RunnablePassthrough.assign(context=lambda x: format_docs(x["context"]))
+            | prompt
+            | llm
+            | StrOutputParser()
         )
         app.logger.info("RAG initialization: answer chain ready")
 
@@ -146,7 +148,7 @@ def chat():
             request_id,
             perf_counter() - started_at,
         )
-    except RuntimeError as error:
+    except RuntimeError:
         app.logger.exception("Chat %s: configuration error during %s", request_id, stage)
         return jsonify({"message": "The chatbot service is not configured"}), 503
     except Exception:
@@ -164,4 +166,4 @@ def chat():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port)

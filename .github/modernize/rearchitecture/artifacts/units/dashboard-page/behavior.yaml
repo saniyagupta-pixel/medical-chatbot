@@ -1,6 +1,0 @@
-unit: dashboard-page
-side_effects: []
-branches: []
-error_paths: []
-concurrency:
-  model: event-loop

@@ -1,4 +1,4 @@
-from setuptools import find_packages,setup
+from setuptools import find_packages, setup
 
 setup(
     name="chatbot-development",
@@ -6,5 +6,6 @@ setup(
     author="Saniya Gupta",
     author_email="opgupta249@gmail.com",
     packages=find_packages(),
-    intall_requires=[]
+    python_requires=">=3.14",
+    install_requires=[],
 )

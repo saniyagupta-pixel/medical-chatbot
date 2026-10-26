@@ -15,7 +15,7 @@ export const loginAction = async ({ request }) => {
   try {
     const { data: response } = await api.post("/api/auth/login", data);
     localStorage.setItem("user", JSON.stringify(response.user));
-    return redirect("/app/dashboard");
+    return redirect("/App/dashboard");
   } catch (error) {
     if (error.response?.status === 401) {
       return { error: "Email or password is incorrect." };
@@ -46,7 +46,7 @@ export const signupAction = async ({ request }) => {
   try {
     const { data: response } = await api.post("/api/auth/signup", data);
     localStorage.setItem("user", JSON.stringify(response.user));
-    return redirect("/app/dashboard");
+    return redirect("/App/dashboard");
   } catch (error) {
     if (error.response?.status === 409) {
       return {

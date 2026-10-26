@@ -1,41 +1,41 @@
 # Dependencies
 node_modules/
-__pycache__/
-*.pyc
 
-# Environment variables
+# Environment variables and local secrets
 .env
-backend/.env
-chatbot/.env
-chatbot/-HP15fd0187tu.env
+.env.*
+!.env.example
+!.env.*.example
 
-# Build files
+# Python environments and generated files
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build and cache output
 dist/
 build/
+coverage/
+.cache/
 
-# Logs
+# Logs and process files
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-*.log
+*.pid
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# VSCode settings
-.vscode/
-
-# Python virtual environment
-venv/
-env/
-
-# Cache
-.cache/
-
-# Uploaded/generated files
+# Local databases
 *.sqlite3
 *.db
 
-# Render / deployment
-*.pid
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

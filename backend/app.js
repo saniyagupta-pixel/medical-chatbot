@@ -1,11 +1,12 @@
 const express=require("express")
 const dotenv=require('dotenv')
+const path=require("path")
 const mongoose=require('mongoose')
 const session=require('express-session')
 const { default: MongoStore } = require("connect-mongo");
 const cors = require("cors");
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 
 const app=express();
 const frontendOrigins = (

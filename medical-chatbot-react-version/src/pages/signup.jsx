@@ -1,12 +1,20 @@
-import { Form } from "react-router-dom";
-import api from "../api";
+import { Form, Link, useActionData } from "react-router-dom";
+
 const SignUp = () => {
+  const actionData = useActionData();
+
   return (
     <div className="d-flex align-items-center py-4 bg-body-tertiary min-vh-100">
       <main className="form-signin w-100 m-auto" style={{ maxWidth: "400px" }}>
         <Form method="POST">
 
-          <h1 className="h3 mb-3 fw-normal">Please sign in</h1>
+          <h1 className="h3 mb-3 fw-normal">Create your account</h1>
+
+          {actionData?.error && (
+            <div className="alert alert-danger" role="alert">
+              {actionData.error}
+            </div>
+          )}
 
           <div className="form-floating mb-2">
             <input
@@ -15,6 +23,8 @@ const SignUp = () => {
               className="form-control"
               id="floatingInput"
               placeholder="name"
+              autoComplete="name"
+              required
             />
             <label htmlFor="floatingInput">Enter Name</label>
           </div>
@@ -26,6 +36,8 @@ const SignUp = () => {
               className="form-control"
               id="floatingInput"
               placeholder="name@example.com"
+              autoComplete="email"
+              required
             />
             <label htmlFor="floatingInput">Email address</label>
           </div>
@@ -37,6 +49,9 @@ const SignUp = () => {
               className="form-control"
               id="floatingPassword"
               placeholder="Password"
+              autoComplete="new-password"
+              minLength={8}
+              required
             />
             <label htmlFor="floatingPassword">Password</label>
           </div>
@@ -46,8 +61,12 @@ const SignUp = () => {
           </button>
 
           <p className="mt-5 mb-3 text-body-secondary text-center">
-            © 2026
+            Already have an Account?
           </p>
+
+          <Link to="/" className="btn btn-primary w-100 py-2">
+            Sign in
+          </Link>
         </Form>
       </main>
     </div>
@@ -55,24 +74,3 @@ const SignUp = () => {
 };
 
 export default SignUp;
-
-import { redirect } from "react-router-dom";
-
-export const signupAction=async ({request})=>{
-  const formData=await request.formData();
-
-  const data={
-    name:formData.get('name'),
-    email:formData.get('email'),
-    password:formData.get('password')
-  }
-
-  
-  const res = await api.post("/api/auth/signup", data);
-  localStorage.setItem(
-    "user",
-    JSON.stringify(res.data.user)
-  )
-  return redirect("/App/dashboard")
-  
-} 

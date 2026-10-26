@@ -1,45 +1,43 @@
-from dotenv import load_dotenv
 import os
-from src.helper import download_embeddings, load_pdf_files,filter_to_minimal_docs,text_split
-from pinecone import Pinecone
-from pinecone import ServerlessSpec
-from langchain_pinecone import PineconeVectorStore
+from pathlib import Path
 
-load_dotenv()
+from dotenv import load_dotenv
+from pinecone import Pinecone, ServerlessSpec
 
-PINECONE_API_KEY=os.getenv("PINECONE_API_KEY")
-OPEN_API_KEY=os.getenv("OPEN_API_KEY")
+from src.helper import (
+    download_embeddings,
+    filter_to_minimal_docs,
+    load_pdf_files,
+    text_split,
+    upsert_documents,
+)
 
-os.environ["PINECONE_API_KEY"]=PINECONE_API_KEY
-os.environ["OPEN_API_KEY"]=OPEN_API_KEY
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+if not PINECONE_API_KEY:
+    raise RuntimeError("PINECONE_API_KEY must be configured in .env")
 
-extracted_data=load_pdf_files("data")
-minimal_docs=filter_to_minimal_docs(extracted_data)
-texts_chunk=text_split(minimal_docs)
+extracted_data = load_pdf_files("data")
+minimal_docs = filter_to_minimal_docs(extracted_data)
+texts_chunk = text_split(minimal_docs)
 
-embedding=download_embeddings()
+embedding = download_embeddings()
 
-pinecone_api_key=PINECONE_API_KEY
-pc=Pinecone(api_key=pinecone_api_key)
+pc = Pinecone(api_key=PINECONE_API_KEY)
 
-index_name="medical-chatbot"
+index_name = "medical-chatbot"
 if not pc.has_index(index_name):
     pc.create_index(
         name=index_name,
         dimension=384,
         metric="cosine",
-        spec=ServerlessSpec(cloud="aws", region="us-east-1")
+        spec=ServerlessSpec(cloud="aws", region="us-east-1"),
     )
-    index=pc.Index(index_name)
 
-docsearch=PineconeVectorStore.from_documents(
-    documents=texts_chunk,
-    embedding=embedding,
-    index_name=index_name
-)
-
-docsearch=PineconeVectorStore.from_existing_index(
+upsert_documents(
+    texts_chunk,
+    embedding,
     index_name=index_name,
-    embedding=embedding
+    api_key=PINECONE_API_KEY,
 )

@@ -1,8 +1,0 @@
-unit: dashboard-page
-bindings:
-  - type: route-declaration
-    name: "React Router child path /App/dashboard"
-    source_loc: 'medical-chatbot-react-version\src\main.jsx:18'
-    target: "DashBoard"
-    must_appear_in_target: true
-runtime_config: []
