@@ -118,6 +118,21 @@ npm --prefix medical-chatbot-react-version run build
 npm --prefix medical-chatbot-react-version run lint
 ```
 
+## Deploy to Render
+
+The root `render.yaml` is a Render Blueprint that creates three connected
+services: a private Python RAG service, the Node.js backend, and a React static
+site. The backend and RAG services use paid compute plans; check current Render
+pricing before syncing the Blueprint. MongoDB remains external, and the
+Blueprint prompts for MongoDB, Pinecone, and Groq credentials.
+
+Before deploying, create the Pinecone `medical-chatbot` index by following the
+indexing steps below, and ensure the Pinecone and Groq credentials are ready.
+Then push the repository to GitHub and create a Blueprint in Render using the
+repository's root `render.yaml`. After the services deploy, set `FRONTEND_URL`
+on the backend to the static site's exact `https://...onrender.com` URL and
+redeploy the backend so its CORS allowlist includes the frontend.
+
 ## Build the Pinecone knowledge index
 
 Index creation is a separate, one-time or maintenance task; it is not run when

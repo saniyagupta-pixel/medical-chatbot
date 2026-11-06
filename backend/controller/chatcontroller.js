@@ -2,9 +2,12 @@
 const Chat=require("../model/chat");
 const axios=require("axios")
 
-const chatbotApiUrl =
-    process.env.CHATBOT_API_URL ||
-    (process.env.NODE_ENV === "production"
+const configuredChatbotApiUrl = process.env.CHATBOT_API_URL;
+const chatbotApiUrl = configuredChatbotApiUrl
+    ? (/^https?:\/\//i.test(configuredChatbotApiUrl)
+        ? configuredChatbotApiUrl
+        : `http://${configuredChatbotApiUrl.replace(/\/+$/, "")}/chat`)
+    : (process.env.NODE_ENV === "production"
         ? ""
         : "http://127.0.0.1:8080/chat");
 
