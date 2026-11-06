@@ -120,18 +120,110 @@ npm --prefix medical-chatbot-react-version run lint
 
 ## Deploy to Render
 
-The root `render.yaml` is a Render Blueprint that creates three connected
-services: a private Python RAG service, the Node.js backend, and a React static
-site. The backend and RAG services use paid compute plans; check current Render
-pricing before syncing the Blueprint. MongoDB remains external, and the
-Blueprint prompts for MongoDB, Pinecone, and Groq credentials.
+Deploy the frontend, backend, and RAG API as three separate Render services
+from the dashboard. Do not use a Blueprint. MongoDB Atlas, Pinecone, and Groq
+are external dependencies; create the Pinecone index before testing chat.
 
-Before deploying, create the Pinecone `medical-chatbot` index by following the
-indexing steps below, and ensure the Pinecone and Groq credentials are ready.
-Then push the repository to GitHub and create a Blueprint in Render using the
-repository's root `render.yaml`. After the services deploy, set `FRONTEND_URL`
-on the backend to the static site's exact `https://...onrender.com` URL and
-redeploy the backend so its CORS allowlist includes the frontend.
+### Before deploying
+
+1. Push the repository to GitHub and make sure Render can access it.
+2. Create a MongoDB Atlas database and database user. Configure Atlas Network
+   Access to allow the Render backend to connect.
+3. Build the Pinecone index by following the instructions below. The index must
+   be named `medical-chatbot`, use 384 dimensions, and use cosine similarity.
+4. Have the MongoDB connection string and Pinecone and Groq API keys ready.
+   Enter secrets in Render's Environment settings; never commit them.
+
+### Deploy the RAG API
+
+In Render, choose **New > Web Service**, connect this repository and branch,
+and set:
+
+| Setting | Value |
+| --- | --- |
+| Name | `medical-chatbot-rag` |
+| Root Directory | `chatbot` |
+| Runtime | Python |
+| Build Command | `pip install -r requirements.txt && pip install gunicorn` |
+| Start Command | `gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120` |
+| Health Check Path | `/healthz` |
+
+Set `PYTHON_VERSION` to `3.14.4`. Add `PINECONE_API_KEY` and `GROQ_API_KEY`;
+optionally set `GROQ_MODEL` to `openai/gpt-oss-20b` (the application default).
+The embedding model needs significant memory, so select a plan with at least
+2 GB RAM and check Render's current pricing.
+
+Deploy the service, wait for it to become healthy, and copy its public
+`https://...onrender.com` URL. The RAG service must be a public web service for
+this dashboard setup because the backend will call its public URL.
+
+### Deploy the backend
+
+Create another **Web Service** using the same repository and branch:
+
+| Setting | Value |
+| --- | --- |
+| Name | `medical-chatbot-backend` |
+| Root Directory | `backend` |
+| Runtime | Node |
+| Build Command | `npm ci` |
+| Start Command | `npm start` |
+
+Set these environment variables:
+
+| Key | Value |
+| --- | --- |
+| `NODE_ENV` | `production` |
+| `MONGO_URL` | MongoDB Atlas connection string |
+| `SESSION_KEY` | Long, random secret |
+| `CHATBOT_API_URL` | RAG URL plus `/chat`, e.g. `https://medical-chatbot-rag.onrender.com/chat` |
+
+Deploy and wait for the service to start. Copy its public URL for the frontend
+configuration. Check the service logs for a successful MongoDB connection.
+
+### Deploy the frontend
+
+Create a **Static Site** using the same repository and branch:
+
+| Setting | Value |
+| --- | --- |
+| Name | `medical-chatbot-frontend` |
+| Root Directory | `medical-chatbot-react-version` |
+| Build Command | `npm ci && npm run build` |
+| Publish Directory | `dist` |
+
+Add the build-time environment variable `VITE_API_BASE_URL` and set it to the
+backend's public base URL, e.g. `https://medical-chatbot-backend.onrender.com`.
+Do not append `/api` or a trailing slash. Add a rewrite rule in **Redirects /
+Rewrites**:
+
+| Source | Destination | Action |
+| --- | --- | --- |
+| `/*` | `/index.html` | Rewrite |
+
+Deploy the site and copy its public URL.
+
+### Allow the frontend in backend CORS
+
+Open the backend service's **Environment** settings and set `FRONTEND_URL` to
+the exact frontend origin, e.g. `https://medical-chatbot-frontend.onrender.com`
+(no path or trailing slash). Save and redeploy the backend. If you also use a
+custom frontend domain, set `FRONTEND_URLS` to a comma-separated list that
+includes both the Render frontend URL and the custom domain.
+
+### Smoke test
+
+1. Open the frontend URL and create an account.
+2. Start a new chat and ask a question grounded in the uploaded PDF.
+3. If chat fails, inspect the backend logs for forwarding or MongoDB errors and
+   the RAG logs for Pinecone, Groq, model download, or memory errors.
+4. The first RAG request may take longer because the embedding model loads on
+   demand. The `/healthz` response reports `rag_initialized: false` until then.
+
+This dashboard deployment does not use a `render.yaml` Blueprint or a Vercel
+configuration file. The three services remain independent Render deployments;
+deploy the RAG API first, then the backend, then the frontend so you can set
+each service URL in the next service's environment.
 
 ## Build the Pinecone knowledge index
 
